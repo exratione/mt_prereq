@@ -1,0 +1,26 @@
+<VirtualHost *:80>
+  ServerAdmin webmaster@localhost
+  ServerName <%= node[:mt_prereq][:server][:hostname] %>
+  ServerAlias <%= [node[:mt_prereq][:server][:aliases]].flatten.join " " %>
+  DocumentRoot <%= node[:apache][:docroot_dir] %>
+
+  <Directory <%= node[:apache][:docroot_dir] %>>
+    Options <%= [@params[:directory_options] || "FollowSymLinks" ].flatten.join " " %>
+    AllowOverride <%= [@params[:allow_override] || "None" ].flatten.join " " %>
+  </Directory>
+
+  <% if @params[:directory_index] -%>
+  DirectoryIndex <%= [@params[:directory_index]].flatten.join " " %>
+  <% end -%>
+
+  ErrorLog <%= node[:apache][:log_dir] %>/<%= @params[:name] %>-error.log
+  CustomLog <%= node[:apache][:log_dir] %>/<%= @params[:name] %>-access.log combined
+
+  # Possible values include: debug, info, notice, warn, error, crit,
+  # alert, emerg.
+  LogLevel warn
+
+  RewriteEngine On
+  RewriteLog <%= node[:apache][:log_dir] %>/<%= @application_name %>-rewrite.log
+  RewriteLogLevel 0
+</VirtualHost>

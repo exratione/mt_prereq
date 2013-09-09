@@ -1,0 +1,11 @@
+<IfModule mod_fcgid.c>
+  AddHandler fcgid-script .fcgi .cgi
+  FcgidConnectTimeout 20
+
+  # Set a ~500K maxiumum request length.
+  FcgidMaxRequestLen 500000
+
+  # Solve intermittent timeout issues.
+  IPCConnectTimeout 20
+  IPCCommTimeout 300
+</IfModule>
