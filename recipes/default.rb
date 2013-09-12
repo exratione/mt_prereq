@@ -1,7 +1,12 @@
 #
 # Main recipe to set up a LAMP server ready for Movable Type 4 or 5.
 #
-# Chef walks through this list of instructions in order.
+# Sets up the following:
+#
+# - MySQL (without any import of data)
+# - Apache (without mod_ssl).
+# - Perl and PHP
+# - Memcached
 #
 
 # Declare that we want all of these recipies.

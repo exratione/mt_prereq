@@ -36,8 +36,8 @@
   #   SSLCertificateFile directive is needed.
   #SSLCertificateFile    /etc/ssl/certs/ssl-cert-snakeoil.pem
   #SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
-  SSLCertificateFile    <%= node[:mt_prereq][:ssl][:certificate_file] %>
-  SSLCertificateKeyFile <%= node[:mt_prereq][:ssl][:key_file] %>
+  SSLCertificateFile    <%= node[:mt_prereq][:ssl][:certificate_path] %>
+  SSLCertificateKeyFile <%= node[:mt_prereq][:ssl][:key_path] %>
 
   #   Server Certificate Chain:
   #   Point SSLCertificateChainFile at a file containing the
@@ -47,8 +47,8 @@
   #   when the CA certificates are directly appended to the server
   #   certificate for convinience.
   #SSLCertificateChainFile /etc/ssl/certs/ca-chain-bundle.crt
-  <% if "#{node[:mt_prereq][:ssl][:chain_file]}" != '' -%>
-  SSLCertificateChainFile <%= node[:mt_prereq][:ssl][:chain_file] %>
+  <% if "#{node[:mt_prereq][:ssl][:chain_path]}" != '' -%>
+  SSLCertificateChainFile <%= node[:mt_prereq][:ssl][:chain_path] %>
   <% end -%>
 
   #   Certificate Authority (CA):
