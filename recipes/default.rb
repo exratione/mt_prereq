@@ -1,28 +1,14 @@
 #
 # Main recipe to set up a LAMP server ready for Movable Type 4 or 5.
 #
-# Sets up the following:
+# Sets up configuration and the like for the following, which must already
+# have been installed via other cookbooks.
 #
 # - MySQL (without any import of data)
 # - Apache (without mod_ssl).
 # - Perl and PHP
 # - Memcached
 #
-
-# Declare that we want all of these recipies.
-include_recipe 'mysql'
-include_recipe 'mysql::server'
-# Provides mysql_* convenience functions.
-include_recipe 'database::mysql'
-include_recipe 'apache2'
-include_recipe 'apache2::mod_fcgid'
-include_recipe 'apache2::mod_ssl'
-include_recipe 'php'
-include_recipe 'php::module_apc'
-include_recipe 'php::module_memcache'
-# Perl recipe provides cpan_module command.
-include_recipe 'perl'
-include_recipe 'memcached'
 
 # ----------------------------------------------------------------
 # General server config.
@@ -40,16 +26,6 @@ end
 # Overwrite /etc/hosts with the relevant hostnames.
 file '/etc/hosts' do
   content "127.0.0.1 localhost #{node[:mt_prereq][:server][:hostname]} #{node[:mt_prereq][:server][:aliases]}\n"
-end
-
-# Recreate a snakeoil cert such that it has the right hostname. Start by making
-# sure that the ssl-cert package is installed.
-package 'ssl-cert' do
-  action :install
-end
-# And then run the command.
-execute 'recreate snakeoil certificate' do
-  command 'make-ssl-cert generate-default-snakeoil --force-overwrite'
 end
 
 # ----------------------------------------------------------------
@@ -77,16 +53,6 @@ mysql_database_user node[:mt_prereq][:db][:user] do
   host 'localhost'
   privileges [:all]
   action :grant
-end
-
-# Load data into the new database if we have an import file. All of the
-# more chefish ways of doing this are not so good in practice, so go with plain
-# execute and just use the mysql client directly.
-if "#{node[:mt_prereq][:db][:mysqldump_file_path]}" != ''
-  execute 'import SQL database' do
-    command "mysql -uroot -p#{node[:mysql][:server_root_password]} #{node[:mt_prereq][:db][:database]} < #{node[:mt_prereq][:db][:mysqldump_file_path]}"
-    path ["/usr/bin"]
-  end
 end
 
 # ----------------------------------------------------------------
@@ -131,8 +97,6 @@ cpan_module 'GD'
 cpan_module 'Digest::SHA1'
 cpan_module 'HTML::Parser'
 
-include_recipe 'xml'
-
 cpan_module 'XML::Atom'
 cpan_module 'XML::Parser'
 cpan_module 'Mail::Sendmail'
@@ -153,14 +117,6 @@ end
 # Set up non-SSL virtual host.
 web_app "#{node[:mt_prereq][:server][:hostname]}" do
   template 'virtual_host.erb'
-  allow_override 'All'
-  directory_options 'FollowSymLinks ExecCGI'
-  directory_index 'index.php index.html'
-end
-
-# Set up SSL virtual host.
-web_app "#{node[:mt_prereq][:server][:hostname]}-ssl" do
-  template 'virtual_host_ssl.erb'
   allow_override 'All'
   directory_options 'FollowSymLinks ExecCGI'
   directory_index 'index.php index.html'
@@ -194,5 +150,5 @@ end
 # ----------------------------------------------------------------
 
 # Substitute in a suitable mt-config.cgi configuration file.
-# OR move this to another cookbook?
+# OR move this to another recipe?
 

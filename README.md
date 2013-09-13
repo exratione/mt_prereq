@@ -15,8 +15,33 @@ place by the cookbook. This suits MT deployments in which the base MT code is
 modified, or in which the webroot includes a lot of supplementary PHP or other
 code, for example.
 
-default
--------
+Typically you'd include the recipes in this cookbook in a role as follows:
+
+    run_list [
+      # Third party, standard.
+      'recipe[mysql]',
+      'recipe[mysql::server]',
+      'recipe[database]',
+      'recipe[database::mysql]',
+      'recipe[apache2]',
+      'recipe[apache2::mod_fcgid]',
+      'recipe[php]',
+      'recipe[php::module_apc]',
+      'recipe[php::module_memcache]',
+      # Perl recipe provides cpan_module command.
+      'recipe[perl]',
+      'recipe[memcached]',
+      'recipe[xml]',
+      # Custom.
+      'recipe[mt_prereq]',
+      'recipe[mt_prereq::ssl]',
+      'recipe[mt_prereq::import_sql]'
+    ]
+
+With default attributes specified in an environment.
+
+Recipe: default
+---------------
 
 The default recipe installs and configures Apache2, PHP, Perl, Memcached, and
 Monit.
@@ -42,16 +67,16 @@ a production environment:
 
   * Many of the other Apache2 cookbook attributes.
 
-import_sql
-----------
+Recipe: import_sql
+------------------
 
 Imports a mysqldump backup of a site database or other SQL into the database
 connection specified for the default recipe.
 
   * `node['mt_prereq']['import_sql']['file_path']`
 
-ssl
----
+Recipe: ssl
+-----------
 
 The SSL recipe installs and configures mod_ssl, with either a snakeoil
 self-signed certificate, or copies in a certificate provided.
