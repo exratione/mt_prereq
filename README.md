@@ -5,11 +5,10 @@ This cookbook is used to build a server ready for Movable Type 4 or 5 to be
 dropped into the webroot. The result is a LAMP server with the necessary
 additional Perl dependencies for Movable Type.
 
-It specifies and includes all the necessary third party cookbook dependencies,
-so is good for use with a cookbook manager like librarian-chef.
+This is tested on Ubuntu only, but may work on other Debian-style distributions.
 
-This was built for use in the development Vagrant-plus-Chef setup, wherein the
-Movable Type webroot is a git repository, and that folder is shared with the
+This was created for use in the development Vagrant-plus-Chef setup, wherein the
+Movable Type webroot is in a git repository, and that folder is shared with the
 virtual machine's webroot. Thus Movable Type doesn't have to be copied into
 place by the cookbook. This suits MT deployments in which the base MT code is
 modified, or in which the webroot includes a lot of supplementary PHP or other
@@ -18,46 +17,100 @@ code, for example.
 Typically you'd include the recipes in this cookbook in a role as follows:
 
     run_list [
-      # Third party, standard.
+      # Third party, most of which are already marked as dependencies by
+      # mt_prereq.
+      'recipe[xml]',
       'recipe[mysql]',
       'recipe[mysql::server]',
       'recipe[database]',
       'recipe[database::mysql]',
-      'recipe[apache2]',
-      'recipe[apache2::mod_fcgid]',
       'recipe[php]',
       'recipe[php::module_apc]',
-      'recipe[php::module_memcache]',
-      # Perl recipe provides cpan_module command.
+      'recipe[apache2]',
+      'recipe[apache2::mod_ssl]',
+      'recipe[apache2::mod_fcgid]',
+      'recipe[apache2::mod_php5]',
       'recipe[perl]',
       'recipe[memcached]',
-      'recipe[xml]',
-      # Custom.
+      # Custom from this cookbook.
       'recipe[mt_prereq]',
-      'recipe[mt_prereq::ssl]',
-      'recipe[mt_prereq::import_sql]'
+      'recipe[mt_prereq::mysql]',
+      'recipe[mt_prereq::mysql_import]',
+      'recipe[mt_prereq::ssl]'
     ]
 
-With default attributes specified in an environment.
+With default attributes specified in an environment or role, such as:
+
+    default_attributes(
+      :apache => {
+         :docroot_dir => '/var/www',
+         :cgibin_dir => '/var/www/cgi-bin'
+      },
+      :mt_prereq => {
+        :db => {
+          :database => 'example',
+          :password => 'password',
+          :user => 'example'
+        },
+        :mt_config => {
+          :admin_cgi_path => 'https://www.example.com/cgi-bin/mt/',
+          :cgi_path => 'https://www.example.com/cgi-bin/mt/',
+          :static_web_path => '/mt-static/',
+          :db_object_driver => 'DBI::mysql',
+          :db_host => 'localhost',
+          :use_memcached => 'true',
+          :memcached_namespace => 'example',
+          :memcached_servers => '127.0.0.1:11211',
+          :optimize_admin_homepage => 'true',
+          # Send mail to log.
+          :mail_transfer => 'smtp'
+          :smtp_server => 'mail.example.com:25'
+        },
+        :mysql_import => {
+          :file_path => '/path/to/mysqldump.sql',
+        },
+        :perl => {
+          :memcached_driver => 'Cache::Memcached::Fast'
+        },
+        :server => {
+          :hostname => 'www.example.com',
+          :aliases => ['example.com']
+        },
+        # These defaults indicate to use the snakeoil cert and not perform any
+        # copying of certs.
+        :ssl => {
+          # Destinations.
+          :certificate_path => '/etc/ssl/certs/ssl-cert-snakeoil.pem',
+          :key_path => '/etc/ssl/private/ssl-cert-snakeoil.key',
+          :chain_path => '',
+          # Sources.
+          :certificate_source_path => '/etc/ssl/certs/ssl-cert-snakeoil.pem',
+          :key_source_path => '/etc/ssl/private/ssl-cert-snakeoil.key',
+          :chain_source_path => ''
+        }
+      },
+      :mysql => {
+        :server_root_password => 'password',
+        :server_debian_password => 'password',
+        :server_repl_password => 'password'
+      }
+    )
 
 Recipe: default
 ---------------
 
-The default recipe installs and configures Apache2, PHP, Perl, Memcached, and
-Monit.
+The default recipe configures Apache2, PHP, Perl and Memcached.
 
-  * `node['mt_prereq']['db']['database']`
-  * `node['mt_prereq']['db']['password']`
-  * `node['mt_prereq']['db']['user']`
+It requires these attributes for the server and Apache2 setup:
 
   * `node['mt_prereq']['server']['hostname']`
   * `node['mt_prereq']['server']['aliases']`
 
-Attributes from dependent cookbooks that must be set:
+Further attributes with default settings:
 
-  * `node['mysql']['server_root_password']`
-  * `node['mysql']['server_debian_password']`
-  * `node['mysql']['server_repl_password']`
+  * `node['mt_prereq']['perl']['memcached_driver']`
+
+Attributes from dependent cookbooks that must be set:
 
   * `node['apache']['docroot_dir']`
   * `node['apache']['cgibin_dir']`
@@ -67,23 +120,68 @@ a production environment:
 
   * Many of the other Apache2 cookbook attributes.
 
-Recipe: import_sql
-------------------
+Recipe: mysql
+-------------
+
+This recipe configures a MySQL database for use.
+
+It requires the following attributes for the MySQL database setup:
+
+  * `node['mt_prereq']['db']['database']`
+  * `node['mt_prereq']['db']['password']`
+  * `node['mt_prereq']['db']['user']`
+
+Attributes from dependent cookbooks that must be set:
+
+  * `node['mysql']['server_root_password']`
+  * `node['mysql']['server_debian_password']`
+  * `node['mysql']['server_repl_password']`
+
+Recipe: mysql_import
+--------------------
 
 Imports a mysqldump backup of a site database or other SQL into the database
 connection specified for the default recipe.
 
-  * `node['mt_prereq']['import_sql']['file_path']`
+Additional attributes required:
+
+  * `node['mt_prereq']['mysql_import']['file_path']`
+
+Recipe: mt_config
+-----------------
+
+This recipe copies a Movable Type configuration file into place.
+
+Additional attributes required:
+
+  * `node['mt_prereq']['mt_config']['admin_cgi_path']`
+  * `node['mt_prereq']['mt_config']['cgi_path']`
+  * `node['mt_prereq']['mt_config']['static_web_path']`
+
+Mail related attributes:
+
+  * `node['mt_prereq']['mt_config']['mail_transfer']`
+  * `node['mt_prereq']['mt_config']['sendmail_path']`
+  * `node['mt_prereq']['mt_config']['smtp_server']`
+
+Attributes with defaults appropriate to a standard LAMP configuration:
+
+  * `node['mt_prereq']['mt_config']['db_object_driver']`
+  * `node['mt_prereq']['mt_config']['db_host']`
+  * `node['mt_prereq']['mt_config']['use_memcached']`
+  * `node['mt_prereq']['mt_config']['memcached_namespace']`
+  * `node['mt_prereq']['mt_config']['memcached_servers']`
+  * `node['mt_prereq']['mt_config']['optimize_admin_homepage']`
 
 Recipe: ssl
 -----------
 
 The SSL recipe installs and configures mod_ssl, with either a snakeoil
-self-signed certificate, or copies in a certificate provided.
+self-signed certificate, or a provided certificate.
 
-The following attributes determine where the certificate files are sourced, and
-where they are copied to in the server. If all of the attributes are omitted,
-the server will default to using a self-signed certificate.
+The following additional attributes determine where the certificate files are
+sourced, and where they are copied to in the server. If all of the attributes
+are omitted, the server will default to using a self-signed certificate.
 
   * `node['mt_prereq']['ssl']['certificate_source_path']`
   * `node['mt_prereq']['ssl']['key_source_path']`

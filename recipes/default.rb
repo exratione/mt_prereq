@@ -1,13 +1,13 @@
 #
-# Main recipe to set up a LAMP server ready for Movable Type 4 or 5.
+# Main recipe to configure a LAMP server to be ready for Movable Type 4 or 5.
 #
-# Sets up configuration and the like for the following, which must already
-# have been installed via other cookbooks.
+# Sets up configuration for the following, which must already have been
+# installed via other cookbooks.
 #
-# - MySQL (without any import of data)
 # - Apache (without mod_ssl).
 # - Perl and PHP
 # - Memcached
+# - Monit
 #
 
 # ----------------------------------------------------------------
@@ -29,38 +29,9 @@ file '/etc/hosts' do
 end
 
 # ----------------------------------------------------------------
-# MySQL
-# ----------------------------------------------------------------
-
-# Use the database cookbook functions to get the MySQL database set up.
-mysql_connection_info = {
-  :host => 'localhost',
-  :username => 'root',
-  :password => node[:mysql][:server_root_password]
-}
-
-# Add the exratione database.
-mysql_database node[:mt_prereq][:db][:database] do
-  connection mysql_connection_info
-  action :create
-end
-
-# Create user and set the grants.
-mysql_database_user node[:mt_prereq][:db][:user] do
-  connection mysql_connection_info
-  password node[:mt_prereq][:db][:password]
-  database_name node[:mt_prereq][:db][:database]
-  host 'localhost'
-  privileges [:all]
-  action :grant
-end
-
-# ----------------------------------------------------------------
 # Perl.
 # ----------------------------------------------------------------
 
-# Note that we're loading some extra cookbook recipies in here. The dependencies
-# require this order.
 cpan_module 'Crypt::DSA'
 cpan_module 'IPC::Run'
 cpan_module 'Archive::Zip'
@@ -68,6 +39,9 @@ cpan_module 'HTML::Parser'
 cpan_module 'HTML::Entities'
 cpan_module 'Cache::File'
 cpan_module 'Crypt::SSLeay'
+
+# Note that it gets quite slow here - these are long installs until we're done
+# with GD.
 
 # No luck getting the Perl API for imagemagick to install via cpan, so do it
 # via apt package. Since I'm doing that, may as well use the apt package for
@@ -100,7 +74,7 @@ cpan_module 'HTML::Parser'
 cpan_module 'XML::Atom'
 cpan_module 'XML::Parser'
 cpan_module 'Mail::Sendmail'
-cpan_module 'Cache::Memcached::Fast'
+cpan_module node[:mt_prereq][:perl][:memcached_driver]
 
 # ----------------------------------------------------------------
 # Apache
@@ -139,16 +113,13 @@ service 'apache2' do
 end
 
 # ----------------------------------------------------------------
-# Monit
+# PHP
 # ----------------------------------------------------------------
 
-# Add in config files.
-
+# No configuration at this time: use the options in the PHP cookbook.
 
 # ----------------------------------------------------------------
-# Movable Type
+# Memcached
 # ----------------------------------------------------------------
 
-# Substitute in a suitable mt-config.cgi configuration file.
-# OR move this to another recipe?
-
+# No configuration at this time: use the options in the Memcached cookbook.

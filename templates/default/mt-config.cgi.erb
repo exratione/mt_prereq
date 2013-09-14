@@ -1,0 +1,48 @@
+# Movable Type configuration file
+#
+# See:
+# http://www.movabletype.org/documentation/appendices/config-directives/
+
+# The CGIPath is the URL to your Movable Type directory. AdminCGIPath is used
+# in the admin interface, and can be different.
+AdminCGIPath <%= node[:mt_prereq][:mt_config][:admin_cgi_path] %>
+CGIPath <%= node[:mt_prereq][:mt_config][:cgi_path] %>
+
+# The StaticWebPath is the URL to your mt-static directory. It is probably best
+# set to be a relative path for most installations.
+StaticWebPath <%= node[:mt_prereq][:mt_config][:static_web_path] %>
+
+# MySQL settings.
+ObjectDriver <%= node[:mt_prereq][:mt_config][:db_object_driver] %>
+Database <%= node[:mt_prereq][:db][:database] %>
+DBUser <%= node[:mt_prereq][:db][:user] %>
+DBPassword <%= node[:mt_prereq][:db][:password] %>
+DBHost <%= node[:mt_prereq][:mt_config][:db_host] %>
+
+# Whether to run background tasks. This is turned off because it is
+# incompatible with mod_fcgid.
+LaunchBackgroundTasks 0
+
+<% if node[:mt_prereq][:mt_config][:use_memcached] == 'true' -%>
+# Using Memcached as a caching mechanism. Requires the Perl module
+# Cache::Memcached::Fast to be installed.
+MemcachedDriver <%= node[:mt_prereq][:perl][:memcached_driver] %>
+MemcachedNamespace <%= node[:mt_prereq][:mt_config][:memcached_namespace] %>
+MemcachedServers <%= node[:mt_prereq][:mt_config][:memcached_servers] %>
+<% end -%>
+
+<% if node[:mt_prereq][:mt_config][:optimize_admin_homepage] == 'true' -%>
+# Optimizations to improve home page speed.
+LearningNewsURL disable
+NewsboxURL disable
+StatsCachePublishing Off
+StatsCacheTTL 0
+<% end -%>
+
+MailTransfer <%= node[:mt_prereq][:mt_config][:mail_transfer] %>
+<% if node[:mt_prereq][:mt_config][:mail_transfer] == 'smtp' -%>
+# Requires the Perl module Mail::Sendmail to be installed.
+SMTPServer <%= node[:mt_prereq][:mt_config][:smtp_server] %>
+<% elsif node[:mt_prereq][:mt_config][:mail_transfer] == 'sendmail' -%>
+SendMailPath <%= node[:mt_prereq][:mt_config][:sendmail_path] %>
+<% end -%>

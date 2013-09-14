@@ -1,8 +1,8 @@
 #
-# Add Apache2 mod_ssl to the prerequisites being set up.
+# Recipe to configure a suitable SSL virtual host in Apache2.
 #
-
-include_recipe 'apache2::mod_ssl'
+# Expects apache2::mod_ssl to be installed.
+#
 
 # ----------------------------------------------------------------
 # Regenerate snakeoil certificate.
