@@ -128,6 +128,32 @@ a production environment:
 
   * Many of the other Apache2 cookbook attributes.
 
+Recipe: mt_config
+-----------------
+
+This recipe copies a Movable Type configuration file into place.
+
+Additional attributes required:
+
+  * `node['mt_prereq']['mt_config']['admin_cgi_path']`
+  * `node['mt_prereq']['mt_config']['cgi_path']`
+  * `node['mt_prereq']['mt_config']['static_web_path']`
+
+Mail related attributes:
+
+  * `node['mt_prereq']['mt_config']['mail_transfer']`
+  * `node['mt_prereq']['mt_config']['sendmail_path']`
+  * `node['mt_prereq']['mt_config']['smtp_server']`
+
+Attributes with defaults appropriate to a standard LAMP configuration:
+
+  * `node['mt_prereq']['mt_config']['db_object_driver']`
+  * `node['mt_prereq']['mt_config']['db_host']`
+  * `node['mt_prereq']['mt_config']['use_memcached']`
+  * `node['mt_prereq']['mt_config']['memcached_namespace']`
+  * `node['mt_prereq']['mt_config']['memcached_servers']`
+  * `node['mt_prereq']['mt_config']['optimize_admin_homepage']`
+
 Recipe: mysql
 -------------
 
@@ -170,32 +196,6 @@ and import should run this way to avoid encoding problems:
 
     mysqldump -uroot -p --default-character-set=latin1 db_name > file.sql
     mysql -uroot -p db_name < file.sql
-
-Recipe: mt_config
------------------
-
-This recipe copies a Movable Type configuration file into place.
-
-Additional attributes required:
-
-  * `node['mt_prereq']['mt_config']['admin_cgi_path']`
-  * `node['mt_prereq']['mt_config']['cgi_path']`
-  * `node['mt_prereq']['mt_config']['static_web_path']`
-
-Mail related attributes:
-
-  * `node['mt_prereq']['mt_config']['mail_transfer']`
-  * `node['mt_prereq']['mt_config']['sendmail_path']`
-  * `node['mt_prereq']['mt_config']['smtp_server']`
-
-Attributes with defaults appropriate to a standard LAMP configuration:
-
-  * `node['mt_prereq']['mt_config']['db_object_driver']`
-  * `node['mt_prereq']['mt_config']['db_host']`
-  * `node['mt_prereq']['mt_config']['use_memcached']`
-  * `node['mt_prereq']['mt_config']['memcached_namespace']`
-  * `node['mt_prereq']['mt_config']['memcached_servers']`
-  * `node['mt_prereq']['mt_config']['optimize_admin_homepage']`
 
 Recipe: ssl
 -----------

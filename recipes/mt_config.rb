@@ -1,5 +1,5 @@
 #
-# Recipe to copy in a MT template.
+# Recipe to copy in a MT configuration file template.
 #
 
 template 'mt-config.cgi' do
