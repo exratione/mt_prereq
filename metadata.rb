@@ -43,6 +43,11 @@ attribute 'mt_prereq/db/user',
   :description => 'The database user name.',
   :default => 'mt'
 
+attribute 'mt_prereq/db/default_character_set',
+  :display_name => 'Database default character set',
+  :description => 'Default character set used in the create database syntax.',
+  :default => 'latin1'
+
 # Server attributes.
 
 attribute 'mt_prereq/server/hostname',

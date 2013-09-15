@@ -1,13 +1,11 @@
 #
 # Main recipe to configure a LAMP server to be ready for Movable Type 4 or 5.
 #
-# Sets up configuration for the following, which must already have been
-# installed via other cookbooks.
+# Sets up configuration for the following:
 #
 # - Apache (without mod_ssl).
 # - Perl and PHP
 # - Memcached
-# - Monit
 #
 
 # ----------------------------------------------------------------
@@ -45,8 +43,8 @@ cpan_module 'Crypt::SSLeay'
 
 # No luck getting the Perl API for imagemagick to install via cpan, so do it
 # via apt package. Since I'm doing that, may as well use the apt package for
-# imagemagick anyway. Using the imagemagick cookbook is just overkill for what I
-# want to do here, and it doesn't deal with perlmagick correctly anyway.
+# imagemagick anyway. Using the imagemagick cookbook is just overkill for what
+# we want to do here, and it doesn't deal with perlmagick correctly anyway.
 case node[:platform]
 when "redhat", "centos", "fedora"
   package "ImageMagick"
@@ -75,6 +73,16 @@ cpan_module 'XML::Atom'
 cpan_module 'XML::Parser'
 cpan_module 'Mail::Sendmail'
 cpan_module node[:mt_prereq][:perl][:memcached_driver]
+
+# FCGI package for Perl.
+fcgi_package = value_for_platform(
+  %w(redhat centos fedora scientific) => {
+    %w(5.0 5.1 5.2 5.3 5.4 5.5 5.6 5.7 5.8) => 'fcgi-perl',
+    'default' => 'perl-FCGI'
+  },
+  'default' => 'libfcgi-perl'
+)
+package fcgi_package
 
 # ----------------------------------------------------------------
 # Apache
@@ -123,3 +131,9 @@ end
 # ----------------------------------------------------------------
 
 # No configuration at this time: use the options in the Memcached cookbook.
+
+# The restart isn't strictly necessary, but it makes it a lot easier to test
+# repeated provisioning - clearing out the old cached data needs to happen.
+service 'memcached' do
+  action :restart
+end

@@ -50,7 +50,8 @@ With default attributes specified in an environment or role, such as:
         :db => {
           :database => 'example',
           :password => 'password',
-          :user => 'example'
+          :user => 'example',
+          :default_character_set => 'latin1'
         },
         :mt_config => {
           :admin_cgi_path => 'https://www.example.com/cgi-bin/mt/',
@@ -67,7 +68,14 @@ With default attributes specified in an environment or role, such as:
           :smtp_server => 'mail.example.com:25'
         },
         :mysql_import => {
-          :file_path => '/path/to/mysqldump.sql',
+          # If a mysqldump file, and the Movable Type database scheme use the
+          # default latin1 encoding, it must have been exported with latin1 as
+          # the default character set:
+          #
+          # mysqldump -uroot -p --default-character-set=latin1 database_name > file.sql
+          #
+          # Otherwise there will be encoding issues.
+          :file_path => '/path/to/mysqldump.sql'
         },
         :perl => {
           :memcached_driver => 'Cache::Memcached::Fast'
@@ -130,6 +138,14 @@ It requires the following attributes for the MySQL database setup:
   * `node['mt_prereq']['db']['database']`
   * `node['mt_prereq']['db']['password']`
   * `node['mt_prereq']['db']['user']`
+  * `node['mt_prereq']['db']['default_character_set']`
+
+Note that the character set is important: it's very possible that your Movable
+Type installation has a latin1 default character set on its database and tables.
+It'll be pushing utf8 data into those latin1 tables, which works, but creates
+all sorts of annoyances on import / export. The database created here has to
+match that default character set for the mysql_import recipe to work without
+munging utf8 characters.
 
 Attributes from dependent cookbooks that must be set:
 
@@ -146,6 +162,14 @@ connection specified for the default recipe.
 Additional attributes required:
 
   * `node['mt_prereq']['mysql_import']['file_path']`
+
+Note that there are interesting character encoding issues with Movable Type, as
+by default it may be storing utf8 data into latin1 tables in a latin1 database.
+Unless you have changed your installation to use utf8 schema, then your export
+and import should run this way to avoid encoding problems:
+
+    mysqldump -uroot -p --default-character-set=latin1 db_name > file.sql
+    mysql -uroot -p db_name < file.sql
 
 Recipe: mt_config
 -----------------
