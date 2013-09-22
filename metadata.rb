@@ -11,17 +11,14 @@ recipe            'mt_prereq::mysql_import', 'Import SQL into the database.'
 recipe            'mt_prereq::ssl', 'Sets up mod_ssl and certificates.'
 
 depends 'apache2'
-depends 'apache2'
-depends 'apache2'
 depends 'database'
 depends 'perl'
 depends 'php'
 depends 'xml'
-
 # Depending on configuration and which recipes are used, also needs these to be
 # installed.
-# depends 'mysql'
-# depends 'memcached'
+depends 'mysql'
+depends 'memcached'
 
 %w{ ubuntu }.each do |os|
   supports os
